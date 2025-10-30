@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Permissions-Policy" content="model-execution *" />
+  <title>Nano Meta-Prompt Summarizer</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
+  <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-6 space-y-4">
+    <h1 class="text-2xl font-bold text-center">🧠 Nano Meta-Prompt Summarizer</h1>
+    <p class="text-gray-600 text-center">Summarize long text into a visual chart — runs fully on-device using Gemini Nano.</p>
+    
+    <textarea id="input-text" rows="6" placeholder="Paste your text here..."
+      class="w-full border rounded-lg p-3 focus:ring focus:ring-blue-200"></textarea>
+
+    <button onclick="summarizeAndVisualize()" 
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">
+      Generate Visualization
+    </button>
+
+    <div id="chart-container" class="mt-6">
+      <canvas id="summary-chart"></canvas>
+    </div>
+
+    <div id="log" class="text-xs text-gray-500 mt-4 whitespace-pre-wrap"></div>
+  </div>
+
+  <!-- Link to the JS file -->
+  <script src="app.js"></script>
+</body>
+</html>
