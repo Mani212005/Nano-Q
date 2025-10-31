@@ -1,4 +1,0 @@
-google-generativeai
-matplotlib
-seaborn
-pandas

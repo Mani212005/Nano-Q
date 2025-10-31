@@ -129,6 +129,8 @@ async function getModel(systemPrompt) {
       return;
     }
 
+    document.getElementById('chart-container').style.display = 'block';
+
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
       alert("File size exceeds 5MB limit.");
       currentCsvContent = null;

@@ -1,60 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Permissions-Policy" content="model-execution *" />
-  <title>Nano Meta-Prompt Summarizer</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MINDLENSE Summarizer</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @font-face {
+    font-family: 'Product Sans';
+    src: url('https://fonts.gstatic.com/s/productsans/v17/pxiDypQkvEgUxDZV9Z_UY1PZFEw.woff2') format('woff2');
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Product Sans', sans-serif;
+    background: 
+      linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)),
+      url('https://images.unsplash.com/photo-1570284613060-766c33850e00?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Ymx1ZSUyMGdhbGF4eXxlbnwwfHwwfHx8MA%3D%3D&fm=jpg&q=60&w=3000')
+      no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  h1, .subtitle, .upload-box, textarea, button, .qa-section {
+    animation: fadeIn 1.5s ease forwards;
+  }
+
+  h1 {
+    font-size: 5rem;
+    margin: 0;
+    font-weight: bold;
+    letter-spacing: -2px;
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+  }
+
+  .upload-box {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    padding: 40px;
+    width: 320px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    cursor: pointer;
+  }
+
+  .plus-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    font-size: 24px;
+    line-height: 40px;
+    margin: 0 auto 10px auto;
+  }
+
+  p {
+    color: white;
+    font-weight: 500;
+  }
+
+  textarea {
+    width: 320px;
+    border-radius: 8px;
+    padding: 10px;
+    resize: none;
+    border: none;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    margin-top: 20px;
+  }
+
+  button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+  }
+
+  #chart-container {
+    margin-top: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 600px;
+  }
+
+  #summary-visualization {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
   
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  .qa-section {
+    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  #answer-display {
+    margin-top: 15px;
+    color: #a5f3fc;
+    font-size: 1rem;
+    font-weight: 500;
+    white-space: pre-wrap;
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+  }
+
+  #log, #qa-model-status, #csv-file-name {
+      font-size: 0.8rem;
+      color: #ccc;
+      margin-top: 10px;
+      white-space: pre-wrap;
+  }
+
+</style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-6">
-  <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-6 space-y-4">
-    <h1 class="text-2xl font-bold text-center">🧠 Nano Meta-Prompt Summarizer</h1>
-    <p class="text-gray-600 text-center">Summarize long text into a visual chart — runs fully on-device using Gemini Nano.</p>
-    
-    <div class="flex items-center justify-center w-full">
-      <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-          <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-          </svg>
-          <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload CSV</span> or drag and drop</p>
-          <p class="text-xs text-gray-500">CSV (MAX. 5MB)</p>
-        </div>
-        <input id="dropzone-file" type="file" class="hidden" accept=".csv" onchange="handleCsvUpload(event)" />
-      </label>
-    </div>
-    <div id="csv-file-name" class="text-sm text-gray-600 mt-2"></div>
+<body>
+  <h1>MINDLENSE</h1>
+  <p class="subtitle">Summarize long text into a visual chart — powered by Gemini AI</p>
 
-    <button onclick="summarizeAndVisualize()" 
-      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">
-      Generate Visualization
-    </button>
+  <label for="dropzone-file" class="upload-box">
+    <div class="plus-btn">+</div>
+    <p>Drop your CSV file here, or click to select</p>
+  </label>
+  <input id="dropzone-file" type="file" class="hidden" accept=".csv" onchange="handleCsvUpload(event)" style="display:none;"/>
+  <div id="csv-file-name"></div>
 
-    <div id="chart-container" class="mt-6">
-      <img id="summary-visualization" class="w-full h-auto" alt="Summary Visualization" />
-    </div>
+  <button onclick="summarizeAndVisualize()">Generate Visualization</button>
 
-    <div id="log" class="text-xs text-gray-500 mt-4 whitespace-pre-wrap"></div>
+  <div id="chart-container" style="display:none;">
+    <img id="summary-visualization" alt="Summary Visualization" />
+  </div>
+  
+  <div id="log"></div>
 
-    <h2 class="text-xl font-bold mt-8">Ask a Question about the Text</h2>
-    <textarea id="question-input" rows="3" placeholder="Ask a question about the text you summarized..."
-      class="w-full border rounded-lg p-3 focus:ring focus:ring-purple-200"></textarea>
-    <button onclick="askQuestionAboutText()" 
-      class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg mt-2">
-      Ask Question
-    </button>
-    <div id="answer-display" class="text-sm text-gray-700 mt-4 whitespace-pre-wrap"></div>
-    <div id="qa-model-status" class="text-xs text-gray-500 mt-2"></div>
+  <div class="qa-section">
+    <h2>Ask a Question</h2>
+    <textarea id="question-input" placeholder="Ask a question about your data..." rows="3"></textarea><br>
+    <button onclick="askQuestionAboutText()">Ask Question</button>
+    <div id="answer-display"></div>
+    <div id="qa-model-status"></div>
   </div>
 
-  <!-- Link to the JS file -->
+  
   <script src="app.js"></script>
 </body>
 </html>
