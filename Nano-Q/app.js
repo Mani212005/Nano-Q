@@ -275,3 +275,61 @@ async function getModel(systemPrompt) {
     qaModelStatus.textContent = "Using: " + usedModel;
     console.log("Final Q&A Answer:", answer);
   }
+
+function toggleCsvData() {
+  const csvContainer = document.getElementById('csv-data-container');
+  const csvTable = document.getElementById('csv-table');
+
+  if (!currentCsvContent) {
+    alert('Please upload a CSV file first!');
+    return;
+  }
+
+  if (csvContainer.style.display === 'none') {
+    // Parse CSV content
+    const rows = currentCsvContent.trim().split('\n');
+    const headers = rows.shift().split(',');
+
+    // Create table
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+
+    // Create table header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      th.style.border = '1px solid white';
+      th.style.padding = '8px';
+      th.style.textAlign = 'left';
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create table body
+    const tbody = document.createElement('tbody');
+    rows.forEach(rowData => {
+      const row = document.createElement('tr');
+      const cells = rowData.split(',');
+      cells.forEach(cellData => {
+        const td = document.createElement('td');
+        td.textContent = cellData;
+        td.style.border = '1px solid white';
+        td.style.padding = '8px';
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    // Clear previous content and append new table
+    csvTable.innerHTML = '';
+    csvTable.appendChild(table);
+    csvContainer.style.display = 'block';
+  } else {
+    csvContainer.style.display = 'none';
+  }
+}

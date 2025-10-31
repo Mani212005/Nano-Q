@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />// Summary
 <title>MINDLENSE Summarizer</title>
 
 <style>
@@ -158,14 +158,38 @@
     <div class="plus-btn">+</div>
     <p>Drop your CSV file here, or click to select</p>
   </label>
-  <input id="dropzone-file" type="file" class="hidden" accept=".csv" onchange="handleCsvUpload(event)" style="display:none;"/>
+  <input id="dropzone-file" 
+    type="file" class="hidden" 
+    accept=".csv" 
+    onchange="handleCsvUpload(event)" 
+    style="display:none;"/>
   <div id="csv-file-name"></div>
 
-  <button onclick="summarizeAndVisualize()">Generate Visualization</button>
+  <div class="button-container" style="display: flex; gap: 10px;">
+    <button onclick="summarizeAndVisualize()">Generate Visualization</button>
+    <button onclick="toggleCsvData()">View CSV Data</button>
+  </div>
 
   <div id="chart-container" style="display:none;">
     <img id="summary-visualization" alt="Summary Visualization" />
   </div>
+
+  <div id="csv-data-container"
+     style="
+       display: none;
+       margin-top: 20px;
+       width: 100%;
+       max-width: 100%;
+       overflow-x: auto;
+       color: white;
+       background: rgba(0,0,0,0.2);
+       padding: 15px;
+       border-radius: 8px;
+       box-sizing: border-box;
+     ">
+  <div id="csv-table" style="width: 100%;"></div>
+</div>
+
   
   <div id="log"></div>
 
