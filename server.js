@@ -1,4 +1,8 @@
 // ===== server.js =====
+
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import path from "path";
@@ -10,6 +14,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 9000;
+const apiKey = process.env.GEMINI_API_KEY;
+
 
 // Middleware
 app.use(cors());
@@ -99,3 +105,5 @@ app.post("/api/v1/ask", (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+
