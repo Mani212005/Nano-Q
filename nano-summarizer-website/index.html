@@ -21,16 +21,40 @@
     <textarea id="input-text" rows="6" placeholder="Paste your text here..."
       class="w-full border rounded-lg p-3 focus:ring focus:ring-blue-200"></textarea>
 
+    <div class="flex items-center justify-center w-full">
+      <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+          <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+          </svg>
+          <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload CSV</span> or drag and drop</p>
+          <p class="text-xs text-gray-500">CSV (MAX. 5MB)</p>
+        </div>
+        <input id="dropzone-file" type="file" class="hidden" accept=".csv" onchange="handleCsvUpload(event)" />
+      </label>
+    </div>
+    <div id="csv-file-name" class="text-sm text-gray-600 mt-2"></div>
+
     <button onclick="summarizeAndVisualize()" 
       class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg">
       Generate Visualization
     </button>
 
     <div id="chart-container" class="mt-6">
-      <canvas id="summary-chart"></canvas>
+      <img id="summary-visualization" class="w-full h-auto" alt="Summary Visualization" />
     </div>
 
     <div id="log" class="text-xs text-gray-500 mt-4 whitespace-pre-wrap"></div>
+
+    <h2 class="text-xl font-bold mt-8">Ask a Question about the Text</h2>
+    <textarea id="question-input" rows="3" placeholder="Ask a question about the text you summarized..."
+      class="w-full border rounded-lg p-3 focus:ring focus:ring-purple-200"></textarea>
+    <button onclick="askQuestionAboutText()" 
+      class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg mt-2">
+      Ask Question
+    </button>
+    <div id="answer-display" class="text-sm text-gray-700 mt-4 whitespace-pre-wrap"></div>
+    <div id="qa-model-status" class="text-xs text-gray-500 mt-2"></div>
   </div>
 
   <!-- Link to the JS file -->

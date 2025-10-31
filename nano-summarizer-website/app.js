@@ -118,25 +118,155 @@ async function getModel(systemPrompt) {
     logDiv.textContent += message + "\n\n";
   }
   
+  let currentInputText = ""; // Global variable to store the current input text
+  let currentCsvContent = null; // Global variable to store the current CSV content
+
+  // ===== Helper: Handle CSV Upload =====
+  function handleCsvUpload(event) {
+    const file = event.target.files[0];
+    if (!file) {
+      currentCsvContent = null;
+      document.getElementById("csv-file-name").textContent = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert("File size exceeds 5MB limit.");
+      currentCsvContent = null;
+      document.getElementById("csv-file-name").textContent = "";
+      return;
+    }
+
+    document.getElementById("csv-file-name").textContent = `Selected file: ${file.name}`;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      currentCsvContent = e.target.result;
+      log(`CSV file loaded: ${file.name}`);
+    };
+    reader.onerror = (e) => {
+      log(`❌ Error reading CSV file: ${e.target.error}`);
+      currentCsvContent = null;
+      document.getElementById("csv-file-name").textContent = "";
+    };
+    reader.readAsText(file);
+  }
+
   // ===== Main Control Flow =====
   async function summarizeAndVisualize() {
     document.getElementById("log").textContent = "";
     const inputText = document.getElementById("input-text").value.trim();
+    currentInputText = inputText; // Store the input text globally
   
-    if (!inputText) {
-      alert("Please paste some text first!");
+    if (!inputText && !currentCsvContent) {
+      alert("Please paste some text or upload a CSV file first!");
       return;
     }
-  
-    log("🚀 Starting summarization...");
-  
-    const meta = await generateMetaPrompt(inputText);
-    if (!meta) return;
-  
-    const chartData = await extractChartData(inputText, meta.optimized_prompt);
-    if (!chartData) return;
-  
-    renderChart(meta.chart_type_suggestion, chartData);
-    log("✅ Visualization complete!");
+
+    log("🚀 Starting visualization...");
+
+    let apiUrl = "";
+    let requestBody = {};
+
+    if (currentCsvContent) {
+      apiUrl = "http://localhost:9000/api/v1/visualize-csv";
+      requestBody = { csv_content: currentCsvContent };
+    } else {
+      apiUrl = "http://localhost:9000/api/v1/visualize";
+      requestBody = { text: inputText };
+    }
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        log(`❌ Error from backend: ${data.error}`);
+        return;
+      }
+
+      const visualizationImage = document.getElementById("summary-visualization");
+      visualizationImage.src = `data:image/png;base64,${data.image}`;
+      visualizationImage.alt = data.title;
+      log("✅ Visualization complete!");
+
+    } catch (error) {
+      log(`❌ Error generating visualization: ${error.message}`);
+      console.error("Error generating visualization:", error);
+    }
   }
-  
+
+  // ===== Question Answering Function =====
+  async function askQuestionAboutText() {
+    const questionInput = document.getElementById("question-input").value.trim();
+    const answerDisplay = document.getElementById("answer-display");
+    const qaModelStatus = document.getElementById("qa-model-status");
+
+    answerDisplay.textContent = "";
+    qaModelStatus.textContent = "";
+
+    if (!currentInputText) {
+      alert("Please summarize some text first before asking a question!");
+      return;
+    }
+
+    if (!questionInput) {
+      alert("Please enter a question!");
+      return;
+    }
+
+    answerDisplay.textContent = "Asking question...";
+
+    let answer = null;
+    let usedModel = "Gemini Cloud";
+
+    // 1️⃣ Try to use Gemini Nano (Prompt API)
+    if (window.ai && window.ai.languageModel) {
+      try {
+        qaModelStatus.textContent = "Attempting to use Gemini Nano (on-device) for Q&A...";
+        const session = await window.ai.languageModel.create({
+          systemPrompt: "You are a helpful assistant. Answer the user's question based ONLY on the provided text. If the answer is not in the text, state that you don't know."
+        });
+
+        const nanoResponse = await session.prompt(`Text: ${currentInputText}\nQuestion: ${questionInput}`);
+        console.log("Nano Q&A response:", nanoResponse);
+        answer = nanoResponse;
+        usedModel = "Gemini Nano";
+      } catch (err) {
+        console.warn("Nano Q&A failed, falling back to server:", err);
+        qaModelStatus.textContent = "Gemini Nano not available or failed for Q&A. Falling back to Gemini Cloud...";
+      }
+    }
+
+    // 2️⃣ Fallback: Call your Express backend (Gemini 1.5)
+    if (!answer) {
+      try {
+        const response = await fetch("http://localhost:9000/api/v1/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: currentInputText, question: questionInput }),
+        });
+
+        const data = await response.json();
+        answer = data.answer;
+      } catch (error) {
+        answerDisplay.textContent = "Error asking question to backend: " + error.message;
+        console.error("Error asking question to backend:", error);
+        qaModelStatus.textContent = "Error: Backend Q&A call failed.";
+        return;
+      }
+    }
+
+    answerDisplay.textContent = "Answer (via " + usedModel + "):\n" + answer;
+    qaModelStatus.textContent = "Using: " + usedModel;
+    console.log("Final Q&A Answer:", answer);
+  }
