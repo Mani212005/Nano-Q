@@ -16,7 +16,7 @@ def generate_visualization(input_data, is_csv=False):
         print(json.dumps({"error": "GEMINI_API_KEY environment variable not set."}, file=sys.stderr))
         sys.exit(1)
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
 
     text_to_process = input_data
     df = None

@@ -118,7 +118,6 @@ async function getModel(systemPrompt) {
     logDiv.textContent += message + "\n\n";
   }
   
-  let currentInputText = ""; // Global variable to store the current input text
   let currentCsvContent = null; // Global variable to store the current CSV content
 
   // ===== Helper: Handle CSV Upload =====
@@ -155,26 +154,16 @@ async function getModel(systemPrompt) {
   // ===== Main Control Flow =====
   async function summarizeAndVisualize() {
     document.getElementById("log").textContent = "";
-    const inputText = document.getElementById("input-text").value.trim();
-    currentInputText = inputText; // Store the input text globally
-  
-    if (!inputText && !currentCsvContent) {
-      alert("Please paste some text or upload a CSV file first!");
+    
+    if (!currentCsvContent) {
+      alert("Please upload a CSV file first!");
       return;
     }
 
     log("🚀 Starting visualization...");
 
-    let apiUrl = "";
-    let requestBody = {};
-
-    if (currentCsvContent) {
-      apiUrl = "http://localhost:9000/api/v1/visualize-csv";
-      requestBody = { csv_content: currentCsvContent };
-    } else {
-      apiUrl = "http://localhost:9000/api/v1/visualize";
-      requestBody = { text: inputText };
-    }
+    const apiUrl = "http://localhost:9000/api/v1/visualize-csv";
+    const requestBody = { csv_content: currentCsvContent };
 
     try {
       const response = await fetch(apiUrl, {
@@ -184,6 +173,13 @@ async function getModel(systemPrompt) {
         },
         body: JSON.stringify(requestBody),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        log(`❌ Backend Error (${response.status}): ${errorText}`);
+        console.error("Backend Error Response:", errorText);
+        return;
+      }
 
       const data = await response.json();
 
@@ -212,8 +208,8 @@ async function getModel(systemPrompt) {
     answerDisplay.textContent = "";
     qaModelStatus.textContent = "";
 
-    if (!currentInputText) {
-      alert("Please summarize some text first before asking a question!");
+    if (!currentCsvContent) {
+      alert("Please upload and visualize a CSV file first before asking a question!");
       return;
     }
 
@@ -232,10 +228,10 @@ async function getModel(systemPrompt) {
       try {
         qaModelStatus.textContent = "Attempting to use Gemini Nano (on-device) for Q&A...";
         const session = await window.ai.languageModel.create({
-          systemPrompt: "You are a helpful assistant. Answer the user's question based ONLY on the provided text. If the answer is not in the text, state that you don't know."
+          systemPrompt: "You are a helpful assistant. Answer the user's question based ONLY on the provided CSV data. If the answer is not in the data, state that you don't know."
         });
 
-        const nanoResponse = await session.prompt(`Text: ${currentInputText}\nQuestion: ${questionInput}`);
+        const nanoResponse = await session.prompt(`CSV Data: ${currentCsvContent}\nQuestion: ${questionInput}`);
         console.log("Nano Q&A response:", nanoResponse);
         answer = nanoResponse;
         usedModel = "Gemini Nano";
@@ -253,8 +249,15 @@ async function getModel(systemPrompt) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ text: currentInputText, question: questionInput }),
+          body: JSON.stringify({ csv_content: currentCsvContent, question: questionInput }),
         });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          qaModelStatus.textContent = `❌ Backend Error (${response.status}): ${errorText}`;
+          console.error("Backend Error Response:", errorText);
+          return;
+        }
 
         const data = await response.json();
         answer = data.answer;
